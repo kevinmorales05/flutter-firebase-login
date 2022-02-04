@@ -31,7 +31,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         autofocus: false,
         controller: firstNameEditingController,
         keyboardType: TextInputType.name,
-        //validator: () {},
+        validator: (value) {
+          if (value!.isEmpty) {
+            return ("Write your name!");
+          }
+          if (firstNameEditingController.text.length < 6 ) {
+            return "Name is too short!";
+          }
+          
+          return null;
+        },
         onSaved: (value) {
           firstNameEditingController.text = value!;
         },
@@ -49,7 +58,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         autofocus: false,
         controller: secondNameEditingController,
         keyboardType: TextInputType.name,
-        //validator: () {},
+        validator: (value) {
+          if (value!.isEmpty) {
+            return ("Write your last name!");
+          }
+          if (secondNameEditingController.text.length < 3 ) {
+            return "Last Name is too short!";
+          }
+          
+          return null;
+        },
         onSaved: (value) {
           secondNameEditingController.text = value!;
         },
@@ -124,6 +142,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         controller: confirmPasswordEditingController,
         obscureText: true,
         validator: (value) {
+          if (value!.isEmpty) {
+            return ("Confirm your password!");
+          }
           if (confirmPasswordEditingController.text.length < 6 ) {
             return "Password is too short!";
           }
