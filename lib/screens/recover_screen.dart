@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
 class RecoverPasswordScreen extends StatefulWidget {
-  const RecoverPasswordScreen({ Key? key }) : super(key: key);
+  const RecoverPasswordScreen({Key? key}) : super(key: key);
 
   @override
   _RecoverPasswordScreenState createState() => _RecoverPasswordScreenState();
@@ -8,6 +11,8 @@ class RecoverPasswordScreen extends StatefulWidget {
 
 class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  //Para implementar recuperacion de contraseña
+  final auth = FirebaseAuth.instance;
   final emailEditingController = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -15,7 +20,16 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
         autofocus: false,
         controller: emailEditingController,
         keyboardType: TextInputType.emailAddress,
-        //validator: () {},
+        validator: (value) {
+          if (value!.isEmpty) {
+            return ("Please the email");
+          }
+          if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]")
+              .hasMatch(value)) {
+            return ("Please Enter a valid email");
+          }
+          return null;
+        },
         onSaved: (value) {
           emailEditingController.text = value!;
         },
@@ -34,9 +48,12 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
         borderRadius: BorderRadius.circular(30),
         color: Colors.black,
         child: MaterialButton(
-          padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
+          padding: const EdgeInsets.fromLTRB(20, 15, 20, 15),
           minWidth: MediaQuery.of(context).size.width,
-          onPressed: () {},
+          onPressed: () {
+            auth.sendPasswordResetEmail(email: emailEditingController.text);
+            Fluttertoast.showToast(msg: "We sent you a recover link to your email account!");
+          },
           child: const Text("Recover Password",
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -50,11 +67,11 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon:const Icon(Icons.arrow_back, color: Colors.black),
-              )),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+          )),
       body: Center(
           child: SingleChildScrollView(
         child: Container(
@@ -67,19 +84,15 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    
                     SizedBox(
                         height: 200,
                         child: Image.asset(
                           "assets/1.png",
                           fit: BoxFit.contain,
                         )),
-                   
-                   
                     const SizedBox(height: 40),
                     emailField,
                     const SizedBox(height: 40),
-                    
                     recoverButton,
                     const SizedBox(height: 40),
                   ],
