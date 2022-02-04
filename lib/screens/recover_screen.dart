@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:login_flutter/screens/login_screen.dart';
 
 class RecoverPasswordScreen extends StatefulWidget {
   const RecoverPasswordScreen({Key? key}) : super(key: key);
@@ -52,7 +53,10 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
           minWidth: MediaQuery.of(context).size.width,
           onPressed: () {
             auth.sendPasswordResetEmail(email: emailEditingController.text);
-            Fluttertoast.showToast(msg: "We sent you a recover link to your email account!");
+            Fluttertoast.showToast(
+                msg: "We sent you a recover link to your email account!");
+            Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const LoginScreen()));
           },
           child: const Text("Recover Password",
               textAlign: TextAlign.center,
