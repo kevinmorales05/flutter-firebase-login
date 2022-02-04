@@ -1,4 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:login_flutter/model/user_model.dart';
+import 'package:login_flutter/screens/login_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({Key? key}) : super(key: key);
@@ -8,6 +14,7 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  final _auth = FirebaseAuth.instance;
   //our form key
   final _formKey = GlobalKey<FormState>();
   //editing controller
@@ -61,7 +68,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         autofocus: false,
         controller: emailEditingController,
         keyboardType: TextInputType.emailAddress,
-        //validator: () {},
+        validator: (value) {
+          if (value!.isEmpty) {
+            return ("Please Enter your email");
+          }
+          if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]")
+              .hasMatch(value)) {
+            return ("Please Enter a valid email");
+          }
+          return null;
+        },
         onSaved: (value) {
           emailEditingController.text = value!;
         },
@@ -80,7 +96,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         autofocus: false,
         controller: passwordEditingController,
         obscureText: true,
-        //validator: () {},
+        validator: (value) {
+          RegExp regex = new RegExp(r'^.{6,}$');
+          if (value!.isEmpty) {
+            return ("Password is required");
+          }
+          if (!regex.hasMatch(value)) {
+            return ("Please Enter a Valid Password(Min. 6 Character)");
+          }
+        },
         onSaved: (value) {
           passwordEditingController.text = value!;
         },
@@ -99,7 +123,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         autofocus: false,
         controller: confirmPasswordEditingController,
         obscureText: true,
-        //validator: () {},
+        validator: (value) {
+          if (confirmPasswordEditingController.text.length < 6 ) {
+            return "Password is too short!";
+          }
+          if(confirmPasswordEditingController.text != passwordEditingController.text){
+            return "Password is not correct!";
+          }
+          return null;
+        },
         onSaved: (value) {
           confirmPasswordEditingController.text = value!;
         },
@@ -119,9 +151,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         borderRadius: BorderRadius.circular(30),
         color: Colors.black,
         child: MaterialButton(
-          padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
+          padding: const EdgeInsets.fromLTRB(20, 15, 20, 15),
           minWidth: MediaQuery.of(context).size.width,
-          onPressed: () {},
+          onPressed: () {
+            singUp(emailEditingController.text, passwordEditingController.text);
+
+          },
           child: const Text("Sing Up",
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -136,11 +171,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon:const Icon(Icons.arrow_back, color: Colors.black),
-              )),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+          )),
       body: Center(
           child: SingleChildScrollView(
         child: Container(
@@ -153,7 +188,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    
                     SizedBox(
                         height: 180,
                         child: Image.asset(
@@ -180,4 +214,41 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       )),
     );
   }
+
+  void singUp(String email, String password) async {
+    if (_formKey.currentState!.validate()) {
+      await _auth
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .then((value) => {
+            postDetailsToFirestore(),
+            Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const LoginScreen()))
+          })
+          .catchError((e) {
+        Fluttertoast.showToast(msg: e!.message);
+      });
+    } //end if
+  } //end function
+  postDetailsToFirestore() async {
+    //calling our firestore
+    //calling our user model
+    //sending these values
+    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+    User? user = _auth.currentUser;
+    UserModel userModel = UserModel();
+    //writing all the values
+    userModel.email = user!.email;
+    userModel.uid = user.uid;
+    userModel.name = firstNameEditingController.text;
+    userModel.lastName = secondNameEditingController.text;
+
+    await firebaseFirestore
+    .collection("users")
+    .doc(user.uid)
+    .set(userModel.toMap());
+    Fluttertoast.showToast(msg: "Account created succesfully!!");
+  }
 }
+
+
+//Kevin Morales 2022/02/04
